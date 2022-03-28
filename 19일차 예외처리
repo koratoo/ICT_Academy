@@ -1,0 +1,50 @@
+https://blog.naver.com/lears98/222684836259
+자세한 포스팅은 블로그
+
+주제 : 예외 처리(Exception)
+
+서론 
+
+예외처리를 하는 이유에 대해 생각해보면
+사전에 일어날 장애에 대해서 대비를 하기위해서이다.
+
+예를 들면 불이 날 것 같은 곳에 소화전이나 소화기가
+준비되어 있는데 이게 없다면 그것들을 찾기 위해 시간이
+많이 소모될 것 이다.
+
+마찬가지로 예외처리도 미리 처리를 해 놓으면 에러가 났을때
+빠르게 처리를 할 수 있다는 장점이 있다.
+
+
+try ~ catch 문을 사용하여 예외처리를 한다.
+이때 단축키는 ctrl shift z
+
+예시)
+
+예외처리 형식
+		try{
+			//수행해야할 본 코드
+			if(b==0) throw new ArithmeticException("0으로 나누지 마시오");
+			//throw 던진다는 의미 ,호출한다는 의미
+			//throw~catch가 한 세트
+      
+      }catch(ArithmeticException e){
+			//예측되는 에러처리 구분
+			//e.printStackTrace();
+			//에러를 추적해주는 메소드
+			System.out.println("0으로 나눌 수 없습니다.");
+			
+      (중략)
+      
+		}catch(NullPointerException e){
+			//e.printStackTrace();
+			System.out.println("str is null");
+			
+		}catch(Exception e){
+			//종류별로 하기 싫다면 catch절 하나에 Exception하나만 넣으면
+			//모든 에러를 받는다.
+			e.printStackTrace();
+		}
+    
+    
+예외처리를 하면 프로그램을 지속시킬 수 있는 방법이 된다.
