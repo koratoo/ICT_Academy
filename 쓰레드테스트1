@@ -1,0 +1,243 @@
+package mymain;
+
+import java.awt.Color;
+import java.awt.GridLayout;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+
+import javax.swing.JFrame;
+import javax.swing.JProgressBar;
+
+public class _01_ThreadTest1 extends JFrame {
+
+		JProgressBar jpb_red,jpb_green,jpb_blue;
+		
+		Thread t_red,t_green,t_blue; 
+		
+		//현재 쓰레드 구동상태 정보
+		boolean bRedRunning =true;
+		boolean bGreenRunning =true;
+		boolean bBlueRunning =true;
+		
+		int speed = 1;
+		
+		public _01_ThreadTest1(){
+		super("MyThread extends Thread");
+
+		this.setLayout(new GridLayout(3,1));
+		
+		jpb_red = new JProgressBar(0,1000);//기본값 0~100
+		jpb_red.setValue(30);
+		jpb_red.setForeground(Color.red);
+		
+		jpb_green = new JProgressBar();
+		jpb_green.setValue(50);
+		jpb_green.setForeground(Color.green);
+		
+		jpb_blue = new JProgressBar();
+		jpb_blue.setValue(70);
+		jpb_blue.setForeground(Color.blue);
+		
+		this.add(jpb_red);
+		this.add(jpb_green);
+		this.add(jpb_blue);
+		
+		//RedThread를 동작시키는 Thread생성...
+		init_red_thread();
+		init_green_thread();	
+		init_blue_thread();
+		
+		//키보드 에벤트 초기화
+		init_key_event();
+		
+		//위치
+		this.setLocation(200, 100);
+		//크기
+		this.setSize(400, 200);
+		//보여주기
+		this.setVisible(true);
+		//종료
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+	}
+		private void init_key_event() {
+			// TODO Auto-generated method stub
+			
+			KeyAdapter adapter = new KeyAdapter() {
+				
+				@Override
+				public void keyPressed(KeyEvent e) {
+					// TODO Auto-generated method stub
+					int key = e.getKeyCode();
+					//R이눌렀나?
+					if(key==KeyEvent.VK_R){
+						//toggle : true <-> false
+						bRedRunning = !bRedRunning;
+						
+						if(bRedRunning){
+							//재가동
+							t_red.resume();
+						}else{
+							//일시정지
+							t_red.suspend();
+						}
+				}else if(key==KeyEvent.VK_G){//G가 눌렸는가?
+					bGreenRunning = !bGreenRunning;
+					
+					if(bGreenRunning){
+						//재가동
+						t_blue.resume();
+					}else{
+						//일시정지
+						t_blue.suspend();
+					}
+				}else if(key==KeyEvent.VK_B){//B가 눌렸는가?
+					bBlueRunning = !bBlueRunning;
+					
+					if(bBlueRunning){
+						//재가동
+						t_blue.resume();
+					}else{
+						//일시정지
+						t_blue.suspend();
+					}
+				}else if(key==KeyEvent.VK_ADD){ // + 숫자패널
+					speed++;
+					
+					setTitle("속도 :" + speed);
+				}else if(key==KeyEvent.VK_SUBTRACT){ // - 숫자패널
+					speed--;
+					if(speed<1) speed =1;//기본속도
+					
+					setTitle("속도:"+ speed);
+					
+				}
+			}
+		};
+			
+			//현재 키가 눌리면 위임하겠다.
+			this.addKeyListener(adapter);
+			
+			
+		}
+		private void init_blue_thread(){
+			//               익명클래스
+			//상속인데 이름 없이 이어받음
+				t_blue = new Thread() {
+					
+					@Override
+					public void run() {
+						// TODO Auto-generated method stub
+						String name = Thread.currentThread().getName();
+						System.out.printf("[%s]Thread가 구동되었습니다.\n",name);
+						
+						while(true){
+							int pos = jpb_blue.getValue();//현재 프로그레스의 포지션
+							pos+=5;
+							
+							if(pos>jpb_blue.getMaximum()) pos=0;
+							
+							jpb_blue.setValue(pos);
+							
+							try {
+								Thread.sleep(10);//1초에 100번 이동
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						
+						}//end-while
+					}
+				};
+				//Thread 이름 부여
+				t_blue.setName("파랑");
+				
+				t_blue.start();
+			}
+
+		
+		private void init_green_thread(){
+		//               익명클래스
+		//상속인데 이름 없이 이어받음
+			t_green = new Thread() {
+				
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					String name = Thread.currentThread().getName();
+					System.out.printf("[%s]Thread가 구동되었습니다.\n",name);
+					
+					while(true){
+						int pos = jpb_green.getValue();//현재 프로그레스의 포지션
+						pos++;
+						
+						if(pos>jpb_green.getMaximum()) pos=0;
+						
+						jpb_green.setValue(pos);
+						
+						try {
+							Thread.sleep(10);//1초에 100번 이동
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						
+					}//end-while
+				}
+			};
+			//Thread 이름 부여
+			t_green.setName("초록");
+			
+			t_green.start();
+		}
+
+		private void init_red_thread(){
+			
+			//Thread상속받아서 구현하기
+			class RedThread extends Thread{
+				
+				public RedThread(String name) {
+					// TODO Auto-generated constructor stub
+					super(name);
+				}
+
+				//run : Thread Procedure
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					String name = Thread.currentThread().getName();
+					System.out.printf("[%s]Thread가 구동되었습니다.\n",name);
+					while(true){
+						int pos = jpb_red.getValue();//현재 프로그레스의 포지션
+						pos+= speed;
+						
+						if(pos>jpb_red.getMaximum()) pos=0;
+						
+						jpb_red.setValue(pos);
+						
+						try {
+							Thread.sleep(10);//1초에 100번 이동
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					
+					}//end-while
+			}//end-run : Thread는 소멸된다.
+		}
+			t_red = new RedThread("빨강쓰레드");
+			
+			t_red.start();//Thread구동
+			
+		}
+	
+	public static void main(String[] args) {
+
+		System.out.printf("현재 코드를 수행하는 쓰레드 : %s\n",Thread.currentThread().getName());
+			
+		new _01_ThreadTest1();
+	}
+
+}
+
+	
