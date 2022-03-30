@@ -1,0 +1,185 @@
+package mymain;
+
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridLayout;
+
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+
+public class 사원등록 extends JFrame {
+
+	Font font = new Font("굴림체",Font.BOLD,20);
+	
+	public 사원등록() {
+		super("사원등록");//타이틀
+
+		//입력컨트롤 초기화
+		init_north_input_components();
+		
+		//자기소개창 초기화
+		init_center_textarea();
+		
+		//저장종료
+		init_south_buttons();
+		
+		//위치
+		this.setLocation(200, 100);
+		//크기
+		this.setSize(380, 450);
+		//보여주기
+		this.setVisible(true);
+		//종료
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+	}
+
+	private void init_north_input_components() {
+		// TODO Auto-generated method stub
+		//1번줄
+		JPanel northPanel = new JPanel(new GridLayout(6,1));
+		FlowLayout fl = new FlowLayout(FlowLayout.LEFT);
+		JPanel p1 = new  JPanel(fl);
+		
+		JLabel jlb_name = new JLabel("성        명:",JLabel.RIGHT);
+		JTextField jtf_name = new JTextField(10);
+		
+		JLabel jlb_gender = new JLabel("성       별:");
+		
+		JRadioButton jrb_male = new JRadioButton("남",true);
+		JRadioButton jrb_female = new JRadioButton("여");
+		
+		//radio버튼 그룹화
+		ButtonGroup bg = new ButtonGroup();
+		bg.add(jrb_male);
+		bg.add(jrb_female);
+		
+		
+		p1.add(jlb_name);
+		p1.add(jtf_name);
+		p1.add(jlb_gender);
+		p1.add(jrb_male);
+		p1.add(jrb_female);
+	
+		
+		JPanel p2 = new JPanel(fl);
+		JLabel jlb_code = new JLabel("주민등록번호:");
+		JTextField jtf_code = new JTextField(8);
+		JLabel jlb_code2 = new JLabel("-");
+		JTextField jtf_code2 = new JTextField(8);
+		
+		p2.add(jlb_code);
+		p2.add(jtf_code);
+		p2.add(jlb_code2);
+		p2.add(jtf_code2);
+		
+		
+		JPanel p3 = new JPanel(fl);
+		JLabel jlb_addr = new JLabel("주                 소:");
+		JTextField jtf_addr = new JTextField(20);
+		
+		p3.add(jlb_addr);
+		p3.add(jtf_addr);
+		
+		JPanel p4 = new JPanel(fl);
+		JLabel jlb_dept = new JLabel("부 서 명:",JLabel.RIGHT);
+		
+		//부서명배열
+		String [] dept_array = {"기획부", "총무부", "인사부", "경리부", "해외영업부"};
+		
+		JComboBox<String> jcb_dept = new JComboBox<String>(dept_array);
+		
+		p4.add(jlb_dept);
+		p4.add(jcb_dept);
+
+		JPanel p5 = new JPanel(fl);
+		JLabel jlb_hobby = new JLabel("취  미:",JLabel.RIGHT);
+		
+		JCheckBox jck_sports = new JCheckBox("운동");
+		JCheckBox jck_music = new JCheckBox("음악");
+		JCheckBox jck_movie = new JCheckBox("영화");
+		JCheckBox jck_game = new JCheckBox("게임");
+		
+		p5.add(jlb_hobby);
+		p5.add(jck_sports);
+		p5.add(jck_music);
+		p5.add(jck_movie);
+		p5.add(jck_game);
+		
+		
+		//6번줄
+		JPanel p6 = new JPanel(fl);
+		JLabel jlb_profile = new JLabel("자기소개");
+		p6.add(jlb_profile);
+		
+		
+		//각 패널 northPanel
+		northPanel.add(p1);
+		northPanel.add(p2);
+		northPanel.add(p3);
+		northPanel.add(p4);
+		northPanel.add(p5);
+		northPanel.add(p6);
+		
+		this.add(northPanel,"North");
+		
+		//앞쪽 JLabel 크기를 통일하겠다.
+		Dimension d = new Dimension(60,20);
+		jlb_name.setPreferredSize(d);
+		jlb_dept.setPreferredSize(d);
+		jlb_hobby.setPreferredSize(d);
+		jlb_profile.setPreferredSize(d);
+	}
+
+	private void init_south_buttons() {
+		// TODO Auto-generated method stub
+		JPanel p = new JPanel();
+		
+		JButton jbt_save = new JButton("저장");
+		JButton jbt_exit = new JButton("저장");
+		
+		p.add(jbt_save);
+		p.add(jbt_exit);
+		
+		this.add(p,"South");
+		
+		jbt_save.setFont(font);
+		jbt_exit.setFont(font);
+		
+	}
+
+	private void init_center_textarea() {
+		// TODO Auto-generated method stub
+		
+		JTextArea jta_profile = new JTextArea();
+		
+		JScrollPane jsp = new JScrollPane(jta_profile);
+		
+		//jsp.setSize(400,200);
+		//크기를 사전에 예약
+		jsp.setPreferredSize(new Dimension(400,200));
+		
+		this.add(jsp,"Center");
+		
+		//폰트적용
+		jta_profile.setFont(font);
+		
+	}
+
+	public static void main(String[] args) {
+
+		new 사원등록();
+	}
+
+}
+
