@@ -8,14 +8,14 @@ class MyRunnable implements Runnable{
 		String name = Thread.currentThread().getName();
 		
 		while(true){
-			System.out.printf("--[%s] 먼저\n",name);
-			
 			synchronized(this)
-			{   //잠든 쓰레드를 깨운다
+		
+			{   
+				//잠든 쓰레드를 깨운다
 				notify();
 				
 				System.out.printf("--[%s] 먼저\n",name);
-			}
+			
 			try {
 				//해당쓰레드 잠든다.
 				wait();
@@ -27,7 +27,7 @@ class MyRunnable implements Runnable{
 			}
 		}
 	}//end-while
-	
+  }//end run
 }
 
 
@@ -47,3 +47,4 @@ public class _04_ThreadTest3_Fairness {
 	}
 
 }
+
