@@ -1,0 +1,140 @@
+package mymain;
+
+
+import java.awt.Color;
+import java.awt.GridLayout;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+
+public class _03_ThreadTest2_Method_Sync extends JFrame {
+
+	JButton jbt_red,jbt_yellow,jbt_blue;
+
+	Object sycObject = new Object();
+	
+	class signalRunnable implements Runnable{
+
+				synchronized void onRed(){
+					//동기화 객체가 없다.sychronized(this) : this가 생략이 생략된 구조
+					
+						jbt_red.setBackground(Color.red);
+						jbt_yellow.setBackground(Color.gray);
+						jbt_blue.setBackground(Color.gray);
+
+						jbt_red.setText("O");
+						jbt_yellow.setText("X");
+						jbt_blue.setText("X");
+
+						try {
+							Thread.sleep(1000);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+
+					}//onRed end
+					
+				synchronized void onYellow(){
+					
+					
+						jbt_red.setBackground(Color.gray);
+						jbt_yellow.setBackground(Color.yellow);
+						jbt_blue.setBackground(Color.gray);
+
+						jbt_red.setText("X");
+						jbt_yellow.setText("O");
+						jbt_blue.setText("X");
+
+						try {
+							Thread.sleep(1000);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}//onYellow
+					
+					
+					
+				synchronized void onBlue(){
+					
+				
+						jbt_red.setBackground(Color.gray);
+						jbt_yellow.setBackground(Color.gray);
+						jbt_blue.setBackground(Color.blue);
+
+						jbt_red.setText("X");
+						jbt_yellow.setText("X");
+						jbt_blue.setText("O");
+
+						try {
+							Thread.sleep(1000);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}//onBlue end
+
+
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					String name = Thread.currentThread().getName();
+					
+					while(true){
+						if(name.equals("R")){
+							onRed();
+						}else if(name.equals("Y")){
+							onYellow();
+						}else if(name.equals("B")){
+							onBlue();
+						}
+					}
+				}// run - end
+		
+	} // SignalRunnable - end 
+
+	
+	
+				public _03_ThreadTest2_Method_Sync() {
+					
+					super("쓰레드 동기화");
+			
+					this.setLayout(new GridLayout(1,3));
+					
+					this.add(jbt_red = new JButton());
+					this.add(jbt_yellow = new JButton());
+					this.add(jbt_blue = new JButton());
+					
+					jbt_red.setBackground(Color.red);
+					jbt_yellow.setBackground(Color.yellow);
+					jbt_blue.setBackground(Color.blue);
+					
+					Runnable runnable =new signalRunnable();
+					
+					Thread t_red = new Thread(runnable,"R");
+					Thread t_yellow = new Thread(runnable,"Y");
+					Thread t_blue = new Thread(runnable,"B");
+					
+					t_red.start();
+					t_yellow.start();
+					t_blue.start();
+					
+					
+					//위치
+					this.setLocation(200, 100);
+					//크기
+					this.setSize(300, 120);
+					//보여주기
+					this.setVisible(true);
+					//종료
+					this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			
+				}
+
+	public static void main(String[] args) {
+
+		new _03_ThreadTest2_Method_Sync();
+	}
+
+}
