@@ -1,0 +1,49 @@
+package mymain;
+
+class MyRunnable implements Runnable{
+
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		String name = Thread.currentThread().getName();
+		
+		while(true){
+			System.out.printf("--[%s] 먼저\n",name);
+			
+			synchronized(this)
+			{   //잠든 쓰레드를 깨운다
+				notify();
+				
+				System.out.printf("--[%s] 먼저\n",name);
+			}
+			try {
+				//해당쓰레드 잠든다.
+				wait();
+				
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}//end-while
+	
+}
+
+
+public class _04_ThreadTest3_Fairness {
+				//교대로 한번씩 한다는  개념
+	
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		Runnable runnable = new MyRunnable();
+		
+		Thread t1 = new Thread(runnable,"형님");
+		Thread t2 = new Thread(runnable,"아우");
+		
+		t1.start();
+		t2.start();
+		
+	}
+
+}
