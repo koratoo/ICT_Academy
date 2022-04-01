@@ -1,0 +1,235 @@
+package mymain.test;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.Timer;
+
+import myutil.MyConstant;
+
+public class 공굴리기 extends JFrame {
+//폭과 높이는 myutil에서
+	
+	JPanel gamePan;
+	
+	
+	//공의정보
+	int ball_x;
+	int ball_y;
+	int ball_radius;
+	
+	boolean bRight = true;//우측이동
+	boolean bDown = true;//아래쪽이냐
+	
+	Timer timer;//swing timer
+	
+	
+	
+	public 공굴리기() {
+		super("공굴리기 실습");
+		//게임판 초기화
+		init_gamepan();
+		
+		//공의 위치 초기화
+		init_ball_position();
+		
+		//타이머 초기화 
+		init_timer();
+		
+		//키이벤트 초기화
+		init_key_event();
+
+		//위치
+		this.setLocation(200, 100);
+		//크기
+		//this.setSize(400, 400);
+		pack();
+		
+		setResizable(false);
+		//보여주기
+		this.setVisible(true);
+		//종료
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+	}
+
+	private void init_key_event() {
+		// TODO Auto-generated method stub
+		
+		this.addKeyListener(new KeyAdapter(){
+			
+			@Override
+			public void keyPressed(KeyEvent e){
+			super.keyPressed(e);
+			
+			int key = e.getKeyCode();
+			if(key==KeyEvent.VK_LEFT) bRight=false;
+			else if(key==KeyEvent.VK_RIGHT) bRight=true;
+			else if(key==KeyEvent.VK_UP) bDown=false;
+			else if(key==KeyEvent.VK_DOWN) bDown=true;
+			else if(key==KeyEvent.VK_ADD){//+
+				
+				ball_radius++;
+			}else if(key==KeyEvent.VK_SUBTRACT){//-
+				ball_radius--;
+			}
+			}
+		
+	});
+		
+		
+	}
+
+	private void init_timer() {
+		// TODO Auto-generated method stub
+		//swing timer는 주기적으로 ActionListener를 준비한 객체를 호출한다.
+		
+		ActionListener timer_listener = new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				
+				//변화값 설정
+				process();
+				
+				gamePan.repaint();
+			}
+		};
+		
+		//              1/1000s
+		timer = new Timer(10, timer_listener);
+		
+		//timer구동
+		timer.start();
+		
+	}
+
+	protected void process() {
+		// TODO Auto-generated method stub
+		
+		//공 움직이기
+		move_ball();
+
+	}
+	int gan =5;
+	private void move_ball() {
+		// TODO Auto-generated method stub
+		
+		//좌우방향
+		if(bRight) 
+			ball_x += gan;
+		else
+			ball_x -= gan;
+		
+		//상하방향
+		if(bDown)
+			ball_y += gan;//ball_y = ball_y + gan;
+		else
+			ball_y -= gan;
+		
+		//오른쪽에 닿았는가?
+		if((ball_x + ball_radius)>MyConstant.MoveBall.GAMEPAN_WIDTH){
+			ball_x = MyConstant.MoveBall.GAMEPAN_WIDTH -ball_radius;
+			
+			bRight=false;//방향
+		}else if((ball_x - ball_radius)<0){//왼쪽 벽에 닿았는가?
+			ball_x = ball_radius;//정확하게 벽에 닿음
+			bRight=true;
+		}
+		
+		//아랫쪽 벽에 닿았나?
+		if(ball_y + ball_radius > MyConstant.MoveBall.GAMEPAN_HEIGH){
+			ball_y = MyConstant.MoveBall.GAMEPAN_HEIGH-ball_radius;
+			bDown = false;
+		}else if((ball_y-ball_radius)<0){
+			ball_y = ball_radius;
+			bDown =true;
+		}
+	}
+
+	private void init_ball_position() {
+		// TODO Auto-generated method stub
+		
+	
+		this.ball_x =300;
+		this.ball_y =200;
+		
+		ball_radius =15;
+		
+		ball_x = MyConstant.MoveBall.GAMEPAN_WIDTH/2;
+		ball_y = MyConstant.MoveBall.GAMEPAN_HEIGH/2;
+	}
+
+	private void init_gamepan(){
+		
+		//캠버스역할
+		gamePan = new JPanel() {
+			
+			@Override
+			protected void paintComponent(Graphics g) {
+				// TODO Auto-generated method stub
+				super.paintComponent(g);
+			
+		
+			//공 그리기
+			g.setColor(Color.red);
+			
+			g.fillOval(ball_x - ball_radius,
+					   ball_y - ball_radius,
+					   ball_radius*2,
+					   ball_radius*2);
+					   
+		    }
+		};//JPanel()-end	
+		
+		//크기예약
+		gamePan.setPreferredSize(new Dimension(MyConstant.MoveBall.GAMEPAN_WIDTH,
+											   MyConstant.MoveBall.GAMEPAN_HEIGH));
+		
+		this.add(gamePan);
+	}
+	
+	
+	public static void main(String[] args) {
+
+		new 공굴리기();
+	}
+
+}
+
+=====================================================
+
+package myutil;
+
+public class MyConstant {
+
+	//공굴리기 상수
+	public class MoveBall{
+		
+		public static final int GAMEPAN_WIDTH = 600;
+		public static final int GAMEPAN_HEIGH = 400;
+	}
+	
+	//벽돌깨기 상수
+	public class BlockGame{
+		
+		public static final int GAMEPAN_WIDTH = 400;
+		public static final int GAMEPAN_HEIGH = 800;
+		
+	}
+	
+	//키상수
+	public class Key{
+		
+	}
+	
+	
+}
