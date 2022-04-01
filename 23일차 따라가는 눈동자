@@ -1,0 +1,279 @@
+package mymain;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
+public class _02_눈알그리기 extends JFrame {
+
+	//그림판의 폭/높이
+	public static final int GRIMPAN_WIDTH = 400;
+	public static final int GRIMPAN_HEIGHT = 600;
+	
+	static Image back_img,back_img_off;
+	
+	static{
+		
+		back_img=Toolkit.getDefaultToolkit().getImage("image/도로로.jpg");
+		back_img_off=Toolkit.getDefaultToolkit().getImage("image/도로로2.jpg");
+	}
+	
+	JPanel grimPan;
+	
+	//눈의좌표
+	Point eye_left=new Point(); //(100,300)
+	Point eye_right=new Point();//(300,300)
+	int eye_radius;//눈의 반지름
+	
+	//눈알 좌표
+	Point eyeball_left = new Point();
+	Point eyeball_right = new Point();
+	int eyeball_radius;//눈알 반지름
+	
+	boolean bEyeoff_left =false;
+	boolean bEyeoff_right =false;
+	
+	public _02_눈알그리기() {
+		super("눈알그리기");
+		
+		//그림판초기화
+		init_grimpan();
+		
+		//눈의위치초기화
+		init_eye_position();
+		
+		//눈알의 위치 초기화
+		init_eyeball_position();
+		
+		//마우스이벤트초기화
+		init_mouse_event();
+		
+		//위치
+		this.setLocation(200, 100);
+		//크기
+		//this.setSize(400, 400);
+		//자식윈도우를 감싼다.
+		pack();
+		
+		//크기변경불가
+		setResizable(false);
+		
+		//보여주기
+		this.setVisible(true);
+		//종료
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+	}
+
+	private void init_mouse_event() {
+		// TODO Auto-generated method stub
+		MouseAdapter adapter = new MouseAdapter() {
+
+			@Override//눌렀을때
+			public void mousePressed(MouseEvent e) {
+				// TODO Auto-generated method stub
+				//super.mousePressed(e);
+				
+				//System.out.println(e);
+				//포지션좌표가 콘솔창에 뜬다.
+				//absolute좌표 모니터 기준 절대좌표
+				//1-왼쪽 2-휠 3-오른쪽 클릭
+				//눌린버튼
+				/*int button = e.getButton();
+				System.out.println(button);
+				if(button==MouseEvent.BUTTON1){
+					System.out.println("왼쪽클릭");
+				}else if(button==MouseEvent.BUTTON2){
+					System.out.println("휠클릭");
+				}else{
+					System.out.println("우클릭");
+				}*/
+				//눌린좌표
+				Point pt = e.getPoint();
+				System.out.println(pt);
+				
+				move_eyeball_left_position(pt);
+				move_eyeball_right_position(pt);
+				
+				grimPan.repaint();
+			}
+			//마우스 포인터에 따라서 움직이는 코드
+			protected void move_eyeball_right_position(Point mousePt) {
+				// TODO Auto-generated method stub
+				
+				int x = mousePt.x - eye_right.x;
+				int y = mousePt.y - eye_right.y;
+				
+				double r = Math.sqrt((x*x)+(y*y));
+				
+				double rate = eyeball_radius/r;
+				
+				eyeball_right.x = (int)(eye_right.x +rate*x);
+				eyeball_right.y = (int)(eye_right.y +rate*y);
+				
+				bEyeoff_right=(r<=eye_radius);
+			}
+
+			protected void move_eyeball_left_position(Point mousePt) {
+				// TODO Auto-generated method stub
+				int x = mousePt.x - eye_left.x;
+				int y = mousePt.y - eye_left.y;
+				
+				double r = Math.sqrt((x*x)+(y*y));
+				
+				double rate = eyeball_radius/r;
+				
+				eyeball_left.x = (int)(eye_left.x +rate*x);
+				eyeball_left.y = (int)(eye_left.y +rate*y);
+				
+				bEyeoff_left=(r<=eye_radius);
+			}
+
+			@Override//띄었을때
+			public void mouseReleased(MouseEvent e) {
+				// TODO Auto-generated method stub
+				super.mouseReleased(e);
+			}
+
+			@Override//드래그했을때
+			public void mouseDragged(MouseEvent e) {
+				// TODO Auto-generated method stub
+				super.mouseDragged(e);
+			}
+			
+			
+			
+		};//객체생성시 brace =>상속코드
+		
+		//그림판에 마우스 이벤트 설정
+		grimPan.addMouseListener(adapter);
+		grimPan.addMouseMotionListener(adapter);
+	}
+	
+
+	private void init_eyeball_position() {
+		// TODO Auto-generated method stub
+		//눈의 중심좌표와 동일하게
+		eyeball_left.x=eye_left.x;
+		eyeball_left.y=eye_left.y;
+		
+		eyeball_right.x=eye_right.x;
+		eyeball_right.y=eye_right.y;
+		
+		//눈알의 반지름 = 눈의 반지름/2
+		eyeball_radius = eye_radius/2;
+		
+	}
+
+	private void init_eye_position() {
+		// TODO Auto-generated method stub
+		//왼쪽 눈 초기화
+		eye_left.x=145;
+		eye_left.y=157;
+		
+		//오른쪽 눈 초기화
+		eye_right.x=274;
+		eye_right.y=157;	
+		
+		//눈알 반지름 ->눈의 크기 조정할때 쓰임
+		eye_radius=47;
+		
+	}
+
+	private void init_grimpan() {
+		// TODO Auto-generated method stub
+		//                익명
+		grimPan = new JPanel() {
+			
+			@Override
+			protected void paintComponent(Graphics g) {
+				// TODO Auto-generated method stub
+				//super.paintComponent(g);
+				//눈알에 마우스 포인터가 들어왔는가?
+				if(bEyeoff_left||bEyeoff_right){
+					g.drawImage(back_img_off, 0, 0, this);
+					return;
+				}
+				
+				g.drawImage(back_img, 0, 0, this);
+				
+				
+				//눈 그리기
+				
+				g.setColor(Color.WHITE);
+				//왼쪽
+				g.fillOval(eye_left.x - eye_radius, 
+						   eye_left.y - eye_radius, 
+						   eye_radius*2, 
+						   eye_radius*2);
+				
+				//오른쪽
+				g.fillOval(eye_right.x - eye_radius, 
+						   eye_right.y - eye_radius, 
+						   eye_radius*2, 
+						   eye_radius*2);
+				
+				g.setColor(Color.BLACK);
+				//왼쪽
+				g.drawOval(eye_left.x - eye_radius, 
+						   eye_left.y - eye_radius, 
+						   eye_radius*2, 
+						   eye_radius*2);
+				
+				//오른쪽
+				g.drawOval(eye_right.x - eye_radius, 
+						   eye_right.y - eye_radius, 
+						   eye_radius*2, 
+						   eye_radius*2);
+				
+				g.setColor(Color.CYAN);
+				//눈알그리기
+				g.fillOval(eyeball_left.x- eyeball_radius,
+						   eyeball_left.y- eyeball_radius,
+						   eyeball_radius*2,
+						   eyeball_radius*2
+						   );
+				
+				g.fillOval(eyeball_right.x - eyeball_radius,
+						   eyeball_right.y - eyeball_radius,
+						   eyeball_radius*2,
+						   eyeball_radius*2
+						   );
+				g.setColor(Color.BLACK);
+				//눈알그리기
+				g.drawOval(eyeball_left.x- eyeball_radius,
+						   eyeball_left.y- eyeball_radius,
+						   eyeball_radius*2,
+						   eyeball_radius*2
+						   );
+				
+				g.drawOval(eyeball_right.x - eyeball_radius,
+						   eyeball_right.y - eyeball_radius,
+						   eyeball_radius*2,
+						   eyeball_radius*2
+						   );
+				
+			}
+			
+			
+		};
+		
+		grimPan.setPreferredSize(new Dimension(GRIMPAN_WIDTH,GRIMPAN_HEIGHT));
+		this.add(grimPan);//위치생략시 center
+		}
+
+	public static void main(String[] args) {
+
+		new _02_눈알그리기();
+	}
+
+}
+
