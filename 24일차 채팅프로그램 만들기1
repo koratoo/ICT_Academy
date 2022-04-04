@@ -1,0 +1,155 @@
+package multicast;
+
+	
+
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+
+public class MultiCastChat extends JFrame {
+
+	JTextArea jta_display;
+	
+	//입력창
+	JTextField jtf_message;
+	
+	JTextField jtf_address;
+	
+	//대화명
+	String nickname = "홍길동";
+	
+	Font font = new Font("굴림체 ", Font.BOLD,16);
+	
+	public MultiCastChat() {
+		super("멀티캐스트");
+
+		//출력창 초기화
+		init_display();
+		
+		//입력창 초기화
+		init_inputs();
+		
+		//키 이벤트 초기화
+		init_key_event();
+		
+		
+		//위치
+		this.setLocation(200, 100);
+		//크기
+		this.setSize(400, 400);
+		//보여주기
+		this.setVisible(true);
+		//종료
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+	}
+
+	private void init_key_event() {
+		// TODO Auto-generated method stub
+		jtf_message.addKeyListener(new KeyAdapter() {
+			
+			@Override
+			public void keyPressed(KeyEvent e) {
+				// TODO Auto-generated method stub
+				int key = e.getKeyCode();
+				
+				if(key == KeyEvent.VK_ENTER){
+					send_message();
+				}	
+			}
+		});
+		
+	}
+
+	protected void send_message() {
+		// TODO Auto-generated method stub
+		
+		//입력 메세지를 읽어온다 : 공백제거
+		String message = jtf_message.getText().trim();
+		
+		//비어있는가?
+		if(message.isEmpty()){
+			JOptionPane.showMessageDialog(this,"메세지를 입력하세요");
+			jtf_message.setText(""); // 값 비우기
+			return;
+		}
+		
+		//출력
+		//[홍길동]님 말씀: 안녕하세요..
+		String display_message = String.format("[%s]님 말씀 : %s\r\n", nickname, message);
+		jta_display.append(display_message);
+		//전체 문서의 길이를 구한다.
+		int position = jta_display.getDocument().getLength();
+		//최근에 전송된 메세지가 화면에 보여짐
+		jta_display.setCaretPosition(position);
+		
+		
+		
+		jtf_message.setText("");//입력메세지 지우기
+			
+		
+	}
+
+	private void init_inputs() {
+		// TODO Auto-generated method stub
+		JPanel p = new JPanel(new GridLayout(3,1));
+		
+		jtf_address =new JTextField("255.255.255.255");//글로벌 브로드캐스트 주소
+		jtf_address.setFont(font);
+		
+		//2번째 줄 : 가입 / 탈퇴버튼
+		JPanel p1 = new JPanel(new GridLayout(1,2));
+		JButton jbt_join = new JButton("가입");
+		JButton jbt_leave = new JButton("탈퇴");
+		jbt_join.setFont(font);
+		jbt_leave.setFont(font);
+		
+		p1.add(jbt_join);
+		p1.add(jbt_leave);
+		
+		//3번째 줄 : 메세지 창
+		jtf_message = new JTextField();
+		jtf_message.setFont(font);
+		
+		p.add(jtf_address);
+		p.add(p1);
+		p.add(jtf_message);
+		
+		this.add(p,"South");
+		
+	}
+
+	private void init_display() {
+		// TODO Auto-generated method stub
+		jta_display =new JTextArea();
+		
+		JScrollPane jsp = new JScrollPane(jta_display);
+		
+		jsp.setPreferredSize(new Dimension(400,400));
+		
+		this.add(jsp,"Center");
+		
+		//jta_display 읽기 전용
+		jta_display.setEditable(false);
+		
+		jta_display.setFont(font);
+		
+		//
+	}
+
+	public static void main(String[] args) {
+
+		new MultiCastChat();
+	}
+
+}
