@@ -37,9 +37,9 @@ public class MultiCastChat extends JFrame {
 	JTextField jtf_address;//주소입력
 	
 	JComboBox<String> jcb_dept;
-	//미리 정해 놓고 작업 					0	  1	  	 2      3
-	String [] dept_name_array = {"총무부","인사부","경리부","영업부"};
-	String [] dept_group_ip_array ={"224.0.0.1","224.0.0.2","224.0.0.3",
+	//미리 정해 놓고 작업 					0	    1	   2      3      4
+	String [] dept_name_array = {"전체 전송","총무부","인사부","경리부","영업부"};
+	String [] dept_group_ip_array ={"255.255.255.255","224.0.0.1","224.0.0.2","224.0.0.3",
 			"224.0.0.4"};
 	
 	
@@ -263,8 +263,10 @@ public class MultiCastChat extends JFrame {
 
 	private void init_inputs() {
 		// TODO Auto-generated method stub
-		JPanel p = new JPanel(new GridLayout(4,1));
+		JPanel p = new JPanel(new GridLayout(3,1)); //4행 1열
 		
+		
+		//0번째 줄
 		jcb_dept = new JComboBox<String>(dept_name_array);
 		
 		//JPanel p0 = new JPanel(new GridLayout(1,2));
@@ -295,7 +297,7 @@ public class MultiCastChat extends JFrame {
 		jtf_message.setFont(font);
 		
 		p.add(jcb_dept);
-		p.add(jtf_address);
+		//p.add(jtf_address);
 		//p.add(p0);
 		p.add(p1);
 		p.add(jtf_message);
@@ -329,7 +331,9 @@ public class MultiCastChat extends JFrame {
 		String dept_name = dept_name_array[index];
 		String ip        = dept_group_ip_array[index];
 		
+		//두 가지가 선택됨 dept_name과 ip
 		System.out.printf("%s%s\n",dept_name,ip);
+		
 		
 		//1.주소 읽어오기
 		//String ip = jtf_address.getText().trim();
