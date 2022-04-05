@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -31,9 +32,19 @@ public class MultiCastChat extends JFrame {
 	JTextArea jta_display;
 	
 	//입력창
-	JTextField jtf_message;
+	JTextField jtf_message;//메시지창 입력
 	
-	JTextField jtf_address;
+	JTextField jtf_address;//주소입력
+	
+	JComboBox<String> jcb_dept;
+	//미리 정해 놓고 작업 					0	  1	  	 2      3
+	String [] dept_name_array = {"총무부","인사부","경리부","영업부"};
+	String [] dept_group_ip_array ={"224.0.0.1","224.0.0.2","224.0.0.3",
+			"224.0.0.4"};
+	
+	
+	
+	JTextField jtf_group_name;//그룹이름
 	
 	//대화명
 	String nickname = "kim";
@@ -45,8 +56,13 @@ public class MultiCastChat extends JFrame {
 	//multicast group에 가입된 주소
 	List<String> groupList = new ArrayList<String>();
 	
+	List<String> groupNameList = new ArrayList<String>();
+	
 	//East쪽에 목록 출력용 컴포넌트
 	JList<String> jlist_group = new JList<String>();
+	
+	
+	
 	
 	public MultiCastChat() {
 		super("멀티캐스트");
@@ -69,7 +85,8 @@ public class MultiCastChat extends JFrame {
 		//위치
 		this.setLocation(200, 100);
 		//크기
-		this.setSize(400, 400);
+		//this.setSize(400, 400);
+		pack();
 		//보여주기
 		this.setVisible(true);
 		//종료
@@ -246,11 +263,22 @@ public class MultiCastChat extends JFrame {
 
 	private void init_inputs() {
 		// TODO Auto-generated method stub
-		JPanel p = new JPanel(new GridLayout(3,1));
+		JPanel p = new JPanel(new GridLayout(4,1));
+		
+		jcb_dept = new JComboBox<String>(dept_name_array);
+		
+		//JPanel p0 = new JPanel(new GridLayout(1,2));
 		
 		//jtf_address =new JTextField("255.255.255.255");//글로벌 브로드캐스트 주소
-		jtf_address =new JTextField("224.0.0.1");//글로벌 브로드캐스트 주소
+		jtf_address =new JTextField("224.0.0.1");
+		
 		jtf_address.setFont(font);
+		
+		//jtf_group_name = new JTextField();
+		//jtf_group_name.setFont(font);
+		
+		//p0.add(jtf_address);
+		//p0.add(jtf_group_name);
 		
 		//2번째 줄 : 가입 / 탈퇴버튼
 		JPanel p1 = new JPanel(new GridLayout(1,2));
@@ -266,7 +294,9 @@ public class MultiCastChat extends JFrame {
 		jtf_message = new JTextField();
 		jtf_message.setFont(font);
 		
+		p.add(jcb_dept);
 		p.add(jtf_address);
+		//p.add(p0);
 		p.add(p1);
 		p.add(jtf_message);
 		
@@ -295,19 +325,33 @@ public class MultiCastChat extends JFrame {
 		// TODO Auto-generated method stub
 		//System.out.println("가입하기");
 	
+		int index = jcb_dept.getSelectedIndex();
+		String dept_name = dept_name_array[index];
+		String ip        = dept_group_ip_array[index];
+		
+		System.out.printf("%s%s\n",dept_name,ip);
+		
 		//1.주소 읽어오기
-		String ip = jtf_address.getText().trim();
-		if(ip.isEmpty()){
+		//String ip = jtf_address.getText().trim();
+		/*if(ip.isEmpty()){
 			JOptionPane.showMessageDialog(this, "가입할 주소를 입력하세요.");
 			jtf_address.setText("224.0.0.1");
 			return;
-		}
+		}*/
 		
 		//(기)가입여부 확인 => ArrayList내에 ip가 존재하는가?
 		if(groupList.contains(ip)){
 			JOptionPane.showMessageDialog(this, "이미 가입된 주소입니다.");
 			return;
 		}
+		
+		/*//그룹 이름
+		String group_name = jtf_group_name.getText();
+		if(group_name.isEmpty()){
+			JOptionPane.showMessageDialog(this,"가입할 그룹명을 입력하세요.");
+			jtf_group_name.setText("");
+			return;
+		}*/
 	
 		//가입하기
 		try {
@@ -318,6 +362,9 @@ public class MultiCastChat extends JFrame {
 			
 			//가입된 주소를 ArrayList에 넣는다.
 			groupList.add(ip);
+			
+			//가입된 그룹명을 ArrayList에 넣는다.
+			groupNameList.add(dept_name);
 			
 			//오른쪽 JList창 갱신
 			update_group_list();
@@ -333,8 +380,8 @@ public class MultiCastChat extends JFrame {
 		// TODO Auto-generated method stub
 		
 		//ArrayList -> Array추출
-		String[] group_array = new String[groupList.size()];
-		groupList.toArray(group_array);
+		String[] group_array = new String[groupNameList.size()];
+		groupNameList.toArray(group_array);
 		
 		jlist_group.setListData(group_array);
 		
@@ -342,7 +389,57 @@ public class MultiCastChat extends JFrame {
 
 	private void on_button_leave() {
 		// TODO Auto-generated method stub
-		System.out.println("탈퇴하기");
+		//System.out.println("탈퇴하기");
+		
+	
+		//String ip = jlist_group.getSelectedValue(); 
+		
+		int index = jlist_group.getSelectedIndex();
+		
+		if(index==-1){
+			JOptionPane.showMessageDialog(this, "정말 탈퇴하시겠습니까?");
+			return;
+		}
+		
+		
+		//System.out.println(ip);
+		/*if(ip==null){
+			JOptionPane.showMessageDialog(this, "탈퇴할 그룹주소를 선택하세요");
+			 return;
+		}*/
+		
+		String ip = groupList.get(index);
+		
+		//삭제 확인 작업
+		int result = JOptionPane.showConfirmDialog(this, 
+				"정말 삭제 하시겠습니까?","그룹탈퇴",
+				JOptionPane.YES_NO_OPTION);
+		
+		//System.out.println(result);
+		
+		//삭제 의사가 없으면 (Yes를 누르지 않았으면) 끝내라
+		if(result !=JOptionPane.YES_OPTION) return;
+		
+		try {
+			//탈퇴작업
+			InetAddress ia = InetAddress.getByName(ip);
+			multicastSocket.leaveGroup(ia);
+			
+			//ArrayList에서 제외
+			//int delete_index = groupList.indexOf(ip);
+			
+			groupList.remove(index);
+			
+			groupNameList.remove(index);
+			
+			//우측화면 갱신
+			update_group_list();
+			
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+	
 	}
 
 	private void init_display() {
@@ -353,7 +450,7 @@ public class MultiCastChat extends JFrame {
 		
 		jsp.setPreferredSize(new Dimension(400,300));
 		
-		this.add(jsp);//,"Center"
+		this.add(jsp,"Center");
 		
 		//jta_display 읽기 전용
 		jta_display.setEditable(false);
