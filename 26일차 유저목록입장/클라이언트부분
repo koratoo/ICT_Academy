@@ -1,0 +1,263 @@
+package mymain.multichat;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+
+import mymain.multichat.MultiServer.ReadThread;
+
+public class MultiClient extends JFrame {
+
+	//모니터 창
+	JTextArea jta_display;
+	
+	//메시지 창 
+	JTextField jtf_message;
+	
+	//접속자 목록
+	JList<String> jlist_user_list; 
+	
+	Font font = new Font("굴림체",Font.BOLD,16);
+	
+	
+	
+	
+	JButton jbt_connect;
+	
+	boolean bConnect = false;
+	
+	Socket client;
+	BufferedReader br;
+	String nickname ="채팅맨";
+	
+	
+	public MultiClient() {
+		super("멀티클라이언트");
+
+		//출력창 초기화
+		init_display();
+		
+		//메시지 입력창 초기화
+		init_input_message();
+		
+		//접속자 수 목록 초기화
+		init_user_list();
+		
+		//위치
+		this.setLocation(1000, 100);
+		//크기
+		//this.setSize(400, 400);
+		pack();
+		
+		//보여주기
+		this.setVisible(true);
+		//종료
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+	}
+
+	
+	
+	private void init_input_message() {
+		// TODO Auto-generated method stub
+		JPanel p = new JPanel(new BorderLayout());
+		
+		jtf_message = new JTextField();
+		jbt_connect = new JButton("연결");
+		
+		jtf_message.setFont(font);
+		jbt_connect.setFont(font);
+		
+		
+		//연결 버튼창 조절
+		jbt_connect.setPreferredSize(new Dimension(120,0));
+		
+		
+		
+		p.add(jtf_message, "Center");
+		p.add(jbt_connect,"East");
+		
+		this.add(p,"South");
+		
+		
+		//연결버튼 눌럿을때 이벤트
+		jbt_connect.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				on_button_connect();//자동호출되는 콜백 메소드
+			}
+		});
+		
+	}
+
+	protected void on_button_connect() {
+		// TODO Auto-generated method stub
+		//토글 처리 : true <-> false
+		
+		bConnect =!bConnect;
+		
+		if(bConnect){//연결
+			//내 컴퓨터 localhost
+			try {
+				client = new Socket("localhost",8000);
+				
+				//첫번째 입장 메세지 전송
+				//									          입장에 대한 정보
+				String send_message = String.format("IN#%s\n",nickname);
+				//클라이언트로 부터 아웃풋 스트림 추출 후 입장 메세지를 서버에 전송
+				client.getOutputStream().write(send_message.getBytes());
+				
+				//메세지 수신대기
+				read_message();
+				
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				//e.printStackTrace();
+				JOptionPane.showMessageDialog(this, "연결실패");
+				bConnect = false;
+				return;
+			}
+			
+		}else{//끊기
+			
+			try {
+				//소켓을 닫는다.
+				client.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		
+		//버튼의 캡션(타이틀) 변경
+		jbt_connect.setText(bConnect ? "끊기":"연결");
+		
+		
+		
+	}
+	
+	
+	
+	//매번이 아닌 한번 연결이 제대로 이루어졌다면...
+	private void read_message() {
+		// TODO Auto-generated method stub
+		
+		
+		try {
+			InputStream is 		  = client.getInputStream();
+			InputStreamReader isr = new InputStreamReader(is);
+			br                    = new BufferedReader(isr);
+			
+			//데이터 수신대기용 쓰레드 생성
+			new Thread() {
+				
+				public void run() {
+					
+					while(true){
+						
+						try {
+							String readData = br.readLine();
+							if(readData==null)break;
+							
+							//사용자 프로토콜 종류에 따라서 코드진행
+							
+							
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							//e.printStackTrace();
+							break; //소켓예외처리
+						}
+						
+					}//end-while
+					
+					//상대방 소켓이 끊긴 경우에 대한 코드
+					
+					
+					
+					
+				};//end-run
+				
+			}.start();
+			
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
+
+
+	public void display_message(String message){
+		
+		jta_display.append(message);
+		jta_display.append("\r\n");//줄바꿈
+		
+		int position = jta_display.getDocument().getLength();
+		jta_display.setCaretPosition(position);//스크롤이 알아서 처리됨
+		
+	
+	}
+	
+	
+
+	private void init_user_list() {
+		// TODO Auto-generated method stub
+		jlist_user_list = new JList<String>();
+		
+		JScrollPane jsp = new JScrollPane(jlist_user_list);
+		
+		//높이는 이미 정의되어있음
+		jsp.setPreferredSize(new Dimension(120,0));
+		
+		this.add(jsp,"East");
+		
+	}
+
+	
+	private void init_display() {
+		// TODO Auto-generated method stub
+		jta_display = new JTextArea();
+		jta_display.setFont(font);
+		
+		JScrollPane jsp = new JScrollPane(jta_display);
+		jsp.setPreferredSize(new Dimension(400,400));
+		
+		this.add(jsp,"Center");
+		
+		//읽기 전용
+		jta_display.setEditable(false);
+		
+		
+	}
+
+	public static void main(String[] args) {
+
+		new MultiClient();
+	}
+
+}
+
