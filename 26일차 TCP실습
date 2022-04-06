@@ -37,3 +37,56 @@ public class EchoClient {
 	}
 
 }
+
+=====================================
+
+에코서버
+
+=====================================
+package mymain.echo;
+
+
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+public class EchoServer {
+
+	public static void main(String[] args) throws Exception {
+		// TODO Auto-generated method stub
+
+		//1.서버 소켓 생성
+		
+		ServerSocket server = new ServerSocket(7000);
+		
+		//2.접속대기
+		
+		System.out.println("--서버 접속대기중...--");
+		
+	while(true)
+	{
+		Socket child = server.accept();
+		
+		//3.전송/수신 스트림
+		OutputStream os = child.getOutputStream();
+		InputStream is = child.getInputStream();
+	
+		//4.데이터 수신
+		byte[] buff = new byte[100];
+		//len : 수신된 데이터 길이
+		int len = is.read(buff);//동기메소드
+		System.out.println(len);
+		String read_data = new String(buff,0,len);
+		System.out.printf("(서버)[%s]로부터 수신데이터 : %s\n",read_data);
+		
+		//5.클라이언트에게 재 전송
+		os.write(read_data.getBytes());
+		
+		//if(msg_array[0].equals("IN")){//입장이먄
+		//}
+		}
+	}
+
+}
+
