@@ -1,0 +1,638 @@
+package mymain.multichat;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.GridLayout;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.JButton;
+import javax.swing.JColorChooser;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+
+import mymain.multichat.MultiServer.ReadThread;
+
+public class MultiClient extends JFrame {
+
+	//모니터 창
+	JTextArea jta_display;
+	
+	//메시지 창 
+	JTextField jtf_message;
+	
+	//접속자 목록
+	JList<String> jlist_user_list; 
+	
+	Font font = new Font("굴림체",Font.BOLD,16);
+	
+	
+	
+	
+	JButton jbt_connect;
+	
+	boolean bConnect = false;
+	
+	Socket client;
+	BufferedReader br;
+	String nickname ="자는중";
+	
+	//화면상의 그림판
+	JPanel grimPan;// 400X400
+	
+	//메모리상의 그림판(주의사항 : setVisible(true)이후에 생성해야한다.)
+	Image memPan;
+	
+	//선정보
+	int line_thick = 5;
+	//int line_color = 0;
+	Color local_color = Color.red;
+	
+	
+	public MultiClient() {
+		super("멀티클라이언트");
+
+		//출력창 초기화
+		init_display();
+		
+		//메시지 입력창 초기화
+		init_input_message();
+		
+		//접속자 수 목록 초기화
+		init_user_list();
+		
+		//그림판 초기화
+		init_grimpan();
+		
+		//마우스 이벤트 초기화
+		init_mouse_event();
+		
+		//위치
+		this.setLocation(1000, 100);
+		
+		//크기변경 불가
+		setResizable(false);
+		
+		//크기
+		//this.setSize(400, 400);
+		pack();
+		
+		
+		
+		//보여주기
+		this.setVisible(true);
+		//종료
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		//메모리그림판 생성(grimPan과 호환되는 메모리상의 그림판 생성)
+		memPan = grimPan.createImage(400,400);
+
+	}
+
+	
+	
+	private void init_mouse_event() {
+		// TODO Auto-generated method stub
+		//그림판에서 마우스가 드래그되면 
+		
+		grimPan.addMouseMotionListener(new MouseAdapter() {
+
+			@Override
+			public void mouseDragged(MouseEvent e) {
+				// TODO Auto-generated method stub
+				//super.mouseDragged(e);
+				
+				//좌표추적
+				//System.out.println(e);
+				//네트워크 접속이 안되어있으면 끝내라
+				if(bConnect == false) {
+					
+					System.out.println("--네트워크 연결 후 이용하세요--");
+					return;
+				
+				}
+				//현재 눌린 좌표
+				Point pt = e.getPoint();
+				
+				//Color->int형
+				int line_color = local_color.getRGB();
+				
+				//네트워크 전송
+				
+				try {
+					//데이터 포장 ->반드시 \n넣어야함                                x  y thick color 
+					String message = String.format("DRAW#%d#%d#%d#%d\n", 
+							pt.x,pt.y,line_thick,line_color
+							);
+					client.getOutputStream().write(message.getBytes());
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				
+				
+				//메모리그림판에 그릴 도구를 구한다.
+				Graphics g = memPan.getGraphics();
+				
+				g.setColor(local_color);
+				g.fillOval(pt.x-line_thick, pt.y-line_thick, line_thick*2, line_thick*2);
+				
+				//grimPan에게 다시 그려라 ...
+				//메모리판 -> 화면에 복사
+				grimPan.repaint();//paintComponent(g)  call
+				
+				
+				
+				
+			}
+		
+		});
+		
+	}
+
+
+
+	private void init_grimpan() {
+		// TODO Auto-generated method stub
+		
+		//{}상속 코드, 무명코드
+		grimPan = new JPanel() {
+			
+			@Override
+			protected void paintComponent(Graphics g) {
+				// TODO Auto-generated method stub
+				//super.paintComponent(g);
+			
+			    //메모리 그림판 -> 현재화면으로 복사한다.
+				g.drawImage(memPan, 0, 0, this);
+			
+			}
+			
+		};
+		
+		grimPan.setPreferredSize(new Dimension(400,400));
+		
+		this.add(grimPan,"West");
+		
+	}
+
+
+
+	private void init_input_message() { //채팅창
+		// TODO Auto-generated method stub
+		JPanel p = new JPanel(new BorderLayout());
+		
+		jtf_message = new JTextField();
+		jbt_connect = new JButton("연결");
+		
+		jtf_message.setFont(font);
+		jbt_connect.setFont(font);
+		
+		
+		//연결 버튼창 조절
+		jbt_connect.setPreferredSize(new Dimension(120,0));
+		
+		
+		
+		p.add(jtf_message, "Center");
+		p.add(jbt_connect,"East");
+		
+		//그림판 메뉴
+		JPanel p1 = new JPanel(new GridLayout(1, 3));
+		p1.setPreferredSize(new Dimension(400,0));
+		p.add(p1,"West");
+		
+		//1. 선굵기 메뉴
+		Integer [] thick_array ={5,10,15,20,25,30};
+		JComboBox<Integer> jcb_thick = new JComboBox<Integer>(thick_array);
+		p1.add(jcb_thick);
+		jcb_thick.setFont(font);
+		
+		//2. 선색상
+		JButton jbt_color = new JButton("선색상");
+		jbt_color.setFont(font);
+		p1.add(jbt_color);
+		
+		//3. 지우기 기능
+		JButton jbt_clear = new JButton("지우기");
+		jbt_clear.setFont(font);
+		p1.add(jbt_clear);
+		
+		//콤보박스 이벤트
+		jcb_thick.addItemListener(new ItemListener() {
+			
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				// TODO Auto-generated method stub
+				//System.out.println(e);
+				//선굵기 설정
+				
+				if(e.getStateChange()==ItemEvent.SELECTED){
+					
+					line_thick = (int)jcb_thick.getSelectedItem();	
+				}
+			}
+		});
+		
+		//선색상 버튼
+		jbt_color.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				
+				on_button_color();
+			}
+		});
+		
+		
+		this.add(p,"South");
+		
+		
+		//연결버튼 눌럿을때 이벤트
+		jbt_connect.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				on_button_connect();//자동호출되는 콜백 메소드
+			}
+		});
+		
+		//지우기 버튼
+		jbt_clear.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				on_button_clear();
+			}
+		});
+		
+		//메세지창에서 입력시 이벤트처리
+		jtf_message.addKeyListener(new KeyAdapter() {
+			
+			@Override
+			public void keyPressed(KeyEvent e) {
+				// TODO Auto-generated method stub
+				super.keyPressed(e);
+				int key = e.getKeyCode();
+				
+				if(key==KeyEvent.VK_ENTER){
+					
+					send_message();
+				}
+			}
+		});
+		
+		
+	}
+
+	protected void on_button_clear() {
+		// TODO Auto-generated method stub
+		//메모리판을 지우기
+		
+		Graphics g = memPan.getGraphics();
+		
+		//지워라...
+		g.clearRect(0, 0, 400, 400);
+		
+		//메모리->화면복사
+		grimPan.repaint();
+		
+	}
+
+
+
+	protected void on_button_color() {
+		// TODO Auto-generated method stub
+		//색상 선택 창
+		Color im_color = JColorChooser.showDialog(this, "선색상을 선택하시오", local_color);
+		
+		//선택된 색이 있으면...
+		if(im_color !=null) local_color = im_color;
+		
+	}
+
+
+
+	protected void send_message() {
+		// TODO Auto-generated method stub
+		//연결되어있지 않으면(알려주고) 끝내라
+		if(bConnect==false){
+			
+			jtf_message.setText("");
+			JOptionPane.showMessageDialog(this, "연결하신 후 채팅을 이용하세요");
+			
+			return;
+		}
+		
+		//입력 메세지 읽어오기
+		String message = jtf_message.getText().trim();
+		if(message.isEmpty()){
+			jtf_message.setText("");
+			return;
+		}
+		
+		
+		try {
+			//전송 메시지를 포장한다 : "MSG#대화명#내용\n"
+			String send_data = String.format("MSG#%s#%s\n", nickname, message);
+			client.getOutputStream().write(send_data.getBytes());
+			
+			//이전 입력된 메세지 지우기
+			jtf_message.setText("");
+			
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+	}
+
+
+
+	protected void on_button_connect() {
+		// TODO Auto-generated method stub
+		//토글 처리 : true <-> false
+		
+		bConnect =!bConnect;
+		
+		if(bConnect){//연결
+			//내 컴퓨터 localhost
+			try {
+				client = new Socket("192.168.0.9",8000);
+				
+				//첫번째 입장 메세지 전송
+				//									          입장에 대한 정보
+				String send_message = String.format("IN#%s\n",nickname);
+				//클라이언트로 부터 아웃풋 스트림 추출 후 입장 메세지를 서버에 전송
+				client.getOutputStream().write(send_message.getBytes());
+				
+				//메세지 수신대기
+				read_message();
+				
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				//e.printStackTrace();
+				JOptionPane.showMessageDialog(this, "연결실패");
+				bConnect = false;
+				return;
+			}
+			
+		}else{//끊기
+			
+			try {
+				//소켓을 닫는다.
+				client.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		
+		//버튼의 캡션(타이틀) 변경
+		jbt_connect.setText(bConnect ? "끊기":"연결");
+		
+		
+		
+	}
+	
+	
+	
+	//매번이 아닌 한번 연결이 제대로 이루어졌다면...
+	private void read_message() {
+		// TODO Auto-generated method stub
+		
+		
+		try {
+			InputStream is 		  = client.getInputStream();
+			InputStreamReader isr = new InputStreamReader(is);
+			br                    = new BufferedReader(isr);
+			
+			//데이터 수신대기용 쓰레드 생성
+			new Thread() {
+				
+				public void run() {
+					
+					while(true){
+						
+						try {
+							String readData = br.readLine();
+							if(readData==null)break;
+							
+							//사용자 프로토콜 종류에 따라서 코드진행
+							//readData ="IN#홍길동"
+							//readData ="OUT#홍길동"
+							//readData ="LIST#길동1#길동2#길동3"
+							//readData = "MSG#홍길동#안녕하세요"
+							//readData = "DRAW#10#50#20#0"
+							
+							//메세지 분류
+							String [] msg_array = readData.split("#");
+							
+							//                         0      1     2    3    4 
+							//String [] msg_array = {"IN" , "홍길동"};
+							//String [] msg_array = {"OUT" , "홍길동"};
+							//String [] msg_array = {"LIST" , "길동1", "길동2", "길동3"};
+							//String [] msg_array = {"msg", "홍길동", "안녕하세요"};
+							//String [] msg_array = {"DRAW", "10", "50","20","0"};
+							
+							if(msg_array[0].equals("IN")){//입장이면
+								
+								String message = String.format("▶[%s]님 입장하셨습니다.", msg_array[1]);
+								display_message(message);
+				
+							}else if(msg_array[0].equals("OUT")){//입장이면
+								
+								String message = String.format("◀[%s]님 입장하셨습니다.", msg_array[1]);
+								display_message(message);
+							
+							}else if(msg_array[0].equals("LIST")){//접속자 목록이면...
+								
+								display_user_list(msg_array);
+								
+							}else if(msg_array[0].equals("MSG")){//채팅이면...
+								
+								String message = String.format("[%s]님 말씀 :\r\n     %s", 
+																msg_array[1],msg_array[2]);
+								display_message(message);
+								
+							}else if(msg_array[0].equals("DRAW")){//그리기면...
+								
+								//String ->int 변환                    0       1     2    3    4  
+								//String [] msg_array = {"DRAW", "10", "50","20", "0"};
+								
+								int x = 0;
+								int y = 0;
+								int thick = 0;
+								int color = 0;
+								
+								//x->정수로 변환
+								try {
+									x = Integer.parseInt(msg_array[1]);
+								} catch (Exception e) {
+									// TODO: handle exception
+								}
+								
+								//y->정수로 변환
+								try {
+									y = Integer.parseInt(msg_array[2]);
+								} catch (Exception e) {
+									// TODO: handle exception
+								}
+								
+								//thick->정수로 변환
+								try {
+									thick = Integer.parseInt(msg_array[3]);
+								} catch (Exception e) {
+									// TODO: handle exception
+								}
+								
+								//color->정수로 변환
+								try {
+									y = Integer.parseInt(msg_array[4]);
+								} catch (Exception e) {
+									// TODO: handle exception
+								}
+								
+								if(thick>30) thick=30;
+								
+								//메모리판에 그리기
+								Graphics g = memPan.getGraphics();
+								g.setColor(new Color( color ));
+								g.fillOval(x-thick, y-thick, thick*2, thick*2);
+								
+								//화면에 복사해라
+								grimPan.repaint();
+								
+							}
+								
+							
+							
+							
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							//e.printStackTrace();
+							break; //소켓예외처리
+						}
+						
+					}//end-while
+					
+					//상대방 소켓이 끊긴 경우에 대한 코드
+					
+					bConnect = false;//끊어진 상태
+					jbt_connect.setText("연결");
+					
+					//채팅창 지우기
+					jta_display.setText("");
+					
+					//유저목록 초기화
+					String [] user_array = new String[0];
+					jlist_user_list.setListData(user_array);
+					
+					//JOptionPane.showMessageDialog(MultiClient.this, "연결이 종료되었습니다.");
+					
+					
+					
+				};//end-run
+				
+			}.start();
+			
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
+
+
+	protected void display_user_list(String[] user_array) {
+		// TODO Auto-generated method stub
+		//앞에 LIST제거 출력
+		
+		jlist_user_list.setListData(user_array);
+	}
+
+
+
+	public void display_message(String message){
+		
+		jta_display.append(message);
+		jta_display.append("\r\n");//줄바꿈
+		
+		int position = jta_display.getDocument().getLength();
+		jta_display.setCaretPosition(position);//스크롤이 알아서 처리됨
+		
+	
+	}
+	
+	
+
+	private void init_user_list() {
+		// TODO Auto-generated method stub
+		jlist_user_list = new JList<String>();
+		
+		JScrollPane jsp = new JScrollPane(jlist_user_list);
+		
+		//높이는 이미 정의되어있음
+		jsp.setPreferredSize(new Dimension(120,0));
+		
+		this.add(jsp,"East");
+		
+	}
+
+	
+	private void init_display() {
+		// TODO Auto-generated method stub
+		jta_display = new JTextArea();
+		jta_display.setFont(font);
+		
+		JScrollPane jsp = new JScrollPane(jta_display);
+		jsp.setPreferredSize(new Dimension(400,400));
+		
+		this.add(jsp,"Center");
+		
+		//읽기 전용
+		jta_display.setEditable(false);
+		
+		
+	}
+
+	public static void main(String[] args) {
+
+		new MultiClient();
+	}
+
+}
+
