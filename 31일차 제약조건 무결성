@@ -1,0 +1,271 @@
+/*
+
+제약조건(Constraint)
+1.데이터무결성 (Data Integrity) 유지하기 위한 속성 성질
+2.종류
+   1) not null(null 허용안함)   or   null(허용)
+   2) unique  : 도메인내에 중복값 허용 안함
+   3) check   : 조건에 맞는값만 허용
+   4) default : 기본값
+   5) primary key(기본키) 
+   	  :  not null + unique + index설정
+   6) foreign key(외래키)
+   	  :  현재입력(수정)값의 유효성을 외부테이블 부모키 (컬럼)을 참조해서
+   	  	  체크를 하는 방식	
+   	  	  
+###[not null]제약조건  : inline방식으로만 할 수 있음.
+create table  tb1
+(
+	--컬럼명                자료형			   제약조건
+	  name   varchar2(100)      not null,   --null 허용하지 않는다 : 필수입력
+      name   varchar2(100)         null     --null 허용한다 (생략시 기본값)
+)   
+   
+insert   into   tb1           values('일길동','하나');
+insert   into   tb1(name)     values('이길동');
+insert   into   tb1           values('삼길동', null);
+
+insert   into   tb1(nickname) values('삼식이'); --(x) : not null 제약 위배
+
+select  *  from  tb1
+   
+###[unique]  :  도메인내 중복값 허용 안함
+
+--인라인 방식 : 테이블 내에 컬럼뒤에 지정하는 방식
+create table tb2 
+(
+	id    varchar2(100)  not null unique,  --제약조건 중복(not null + unique)
+	pwd   varchar2(100)  not null
+)
+
+insert into tb2 values('one', '1234');
+insert into tb2 values('two', '1234');
+
+insert into tb2 values('one', '5678'); --ORA-00001 : 무결성 제약 조건(TEST.SYS_C004001)에 위배됨
+
+select * from tb2
+
+--테이블생성 후 수정을 통한 방식 : 제약조건명을 사용자가 지정할 수 있다.
+create table tb22
+(
+	id  varchar2(100) not null,
+    pwd varchar2(100) not null
+)
+
+--id컬럼에 추가로 unique제약조건
+alter table tb22
+	add constraint unique_tb22_id    unique(id);
+				   (제약조건명)
+
+insert into tb22 values('one', '1234');
+insert into tb22 valuse('one', '4567'); --ORA-00001 : 무결성 제약 조건 (TEST.UNIQUE_TB22_ID)에 위배됩니다.
+
+--inline + 제약이름부여
+create table tb222
+(
+	id    varchar2(100)   not  null,
+	pwd   varchar2(100)   not  null,
+	--별도로 제약조건 선언
+	constraint unique_tb222_id  unique(id)
+)
+
+insert into tb222 values('one', '1234');
+insert into tb222 values('one', '4567'); --ORA-00001 : 무결성 제약 조건(TEST.UNIQUE_TB222_ID)에 위배됩니다.
+
+###[check 제약] : 조건에 맞는 값만 허용
+
+연산자
+     산술연산자	   :  +  -  *   /  mod(피젯수, 젯수) 
+     관계연산자              :  >  >=   <  <=  = (같냐?)   != (같지않냐?)  <> (같지 않냐?)
+     일반논리연산자	   : and  or  not
+     기타		   : 필드  between A  and  B (A~B사이냐?)
+     		   : 필드  in(A,B,C)         (필드 = A or 필드 = B or 필드 = C)
+
+create  table tb3
+(
+	name  varchar2(100) not  null,
+	--         check(조건)
+	kor   int  check( kor>=0  and kor<=100 ), --inline check제약설정
+	eng   int,  
+	mat   int,
+	--제약조건 설정 
+	constraint check_tb3_eng  check( eng between 0 and 100 )
+)
+
+
+select * from tb3
+--별도로 테이블 수정을 통해서 제약조건 부여(가장 보편적이니 방법)
+alter table tb3
+	add constraint check_tb3_mat    check( mat between 0 and 100);
+
+insert into tb3 values('일길동' , 88, 99, 100);
+
+--오류코드				
+insert into tb3 values('이길동' , -1 , 99, 99 );	-- ORA-02290:체크 제약조건(TEST.SYS_C004009) 위배
+
+insert into tb3 values('이길동' , 88 , 101, 99 );	-- ORA-02290: 체크 제약조건(TEST.CHECK_TB3_ENG)이 위배되었습니다
+
+insert into tb3 values('이길동' , 88 , 10, 999 ); -- ORA-02290: 체크 제약조건(TEST.CHECK_TB3_MAT)이 위배되었습니다
+	
+--제약조건 확인 방법(Dictionary 저장) : user_constraints에 저장
+select constraint_type,constraint_name,table_name  from user_constraints 
+where table_name = upper('tb3') --upper('값'):대문자변환함수
+
+
+조건)  성별은    '남자'  '여자' 만 입력되도록 제약조건을 설정한다.
+create table tb33 
+(
+	name 		varchar2(100)   not  null,
+	gender      varchar2(100)   not  null
+)
+
+alter table tb33
+  add constraint check_tb33_gender  check(gender in('남자','여자'));
+  
+insert into tb33 values( '길태미' , '남');
+--  남    여    man   women   male   female <= 일관성 없음. (문제 발생요인이 됨)
+
+delete from tb33 --잘못된 데이터가 있으면 지우고 실행
+
+select * from tb33
+
+###[default] : 입력하지  않았을 때 기본값
+
+create table tb4
+(
+	name      varchar2(100)   not null,
+	age       int             default 1,
+	gender    varchar2(100)   default '남자',
+	regdate   date            default sysdate --현재 날짜
+)
+
+insert into tb4 values('길태미' , 28, '남자', '2022-4-12');
+insert into tb4(name) values('길선미');
+insert into tb4 values('길', default, default,default);
+insert into tb4 values('길미', 30, '여자',default);
+--에러로 동작 안되는경우 sql창을 껏다 켜기
+--values에 s만 빠져도 누락
+
+
+select * from tb4
+
+###[primary key] : 기본키       <-레코드를 대표하는 컬럼
+:  not  null   +  unique   + index
+   (중복제약조건)              + (인덱스)
+
+create table tb5
+(
+      idx    int,         --일련번호(PK)
+      name   varchar2(100) not null,
+	  tel    varchar2(100) 
+)
+
+--기본키설정
+alter table tb5
+  add constraint  pk_tb5_idx  primary key(idx);
+
+insert into tb5 values(1,'일길동', '010-111-1111');
+--오류
+insert into tb5(name) values('에러예시문');
+insert into tb5   values(1,'원길동','010-222-1111');
+
+##2개 이상의 컬럼을 묶어서 PK로 사용할 수 있다.
+create table tb55
+(
+	idx int,
+	name varchar2(100),
+	regdate date
+)
+
+alter table tb55
+	add constraint   pk_tb55_idx_regdate primary key(idx,regdate);
+	
+insert into tb55 values(1,sysdate);
+
+select idx, regdate,name from tb55
+
+	
+##시퀀스를 이용한 idx처리 
+
+create table tb555
+(
+	idx     int,
+	regdate date default sysdate
+)
+
+alter table tb555
+  add constraint  pk_tb555_idx primary key(idx);
+
+	
+	
+sequence :         일련번호 관리객체
+1.생성
+				       (시퀀스명)
+create    sequence   seq_tb555_idx
+
+2.사용
+select   seq_tb555_idx.nextVal  , seq_tb555_idx.currVal from dual
+	
+3.삭제
+drop sequence seq_tb555_idx
+
+
+--시퀀스를 이용해서 tb555 -> idx값을 넣기 
+insert into tb555 values(seq_tb555_idx.nextVal, sysdate);
+
+select * from tb555
+
+--제약조건 확인 방법(Dictionary 저장) : user_constraints에 저장
+select constraint_type,constraint_name,table_name  from user_constraints 
+where table_name = upper('tb5') --upper('값'):대문자변환함수
+
+###[foreign key] : 외래키 <- 참조하는(부모) 키 값을 이용해서 insert/update에 대한 내용을 결정		
+
+create table 학생
+(
+    학번 		int,
+    이름 		varchar2(100) not null,
+    전화 		varchar2(100) not null,
+    보호자명  	varchar2(100) not null,
+    보호자직업        varchar2(100), 
+    주소	    varchar2(100)
+)
+
+alter table 학생
+	add constraint pk_학생_학번 primary key(학번)
+	
+insert into 학생 values(1,'일길동','111-1111','일아비','자영업','서울');
+insert into 학생 values(2,'이길동','222-2222','이아비','회사원','인천');
+		
+select * from 학생
+
+
+create table 성적
+(
+	일련번호  	 int,
+	학번        	 int,
+	국어        	 int,
+	영어        	 int,
+	수학        	 int,
+	학년       	 int,
+	학기 		 int,
+	시험종류        varchar2(100)
+)
+
+--기본키
+alter table 성적
+  add constraint  pk_성적_일련번호   primary key(일련번호) : 
+  
+--외래키
+alter table 성적
+  add constraint  fk_성적_학번  foreign key(학번)
+  							references 학생(학번) : 
+
+insert into 성적 values(1, 1,  100, 90 , 80, 1 , 1, '중간고사');  							
+
+--오류
+insert into 성적 values(2, 5,  100, 90 , 80, 1 , 1, '기말고사');  							
+
+select * from 성적
+
+*/
