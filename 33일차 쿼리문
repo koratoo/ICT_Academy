@@ -1,0 +1,210 @@
+/*
+-- SYSDTE 예제
+select to_char(sysdate,'RRRR-MM-DD HH24:MI:SS') "지금시간"
+  from dual ;
+ 
+select to_char(sysdate-1,'RRRR-MM-DD HH24:MI:SS') "하루전지금시간"
+  from dual ;
+ 
+select to_char(sysdate-1/24,'RRRR-MM-DD HH24:MI:SS') "1시간전시간"
+  from dual ;
+ 
+select to_char(sysdate-1/24/60,'RRRR-MM-DD HH24:MI:SS') "1분전시간"
+  from dual ;
+ 
+select to_char(sysdate-1/24/60/10,'RRRR-MM-DD HH24:MI:SS') "6초전시간"
+  from dual ;
+ 
+select to_char(sysdate-(5/24 + 30/24/60 + 10/24/60/60),'RRRR-MM-DD HH24:MI:SS') "5시간 30분 10초전"
+  from dual ;
+  
+  
+  
+  
+--ADD_MONTHS : SYSDATE를 이용한 예제
+SELECT TO_CHAR(ADD_MONTHS(SYSDATE,3),'RRRR-MM-DD')  "date"
+  FROM DUAL; 
+ 
+SELECT ADD_MONTHS(SYSDATE,3)  "date"  FROM DUAL; 
+ 
+-- TIMESTAMP를 이용한 예제
+SELECT TO_CHAR(ADD_MONTHS(SYSTIMESTAMP,3),'RRRR-MM-DD')  "date"
+  FROM DUAL;
+
+SELECT ADD_MONTHS(SYSTIMESTAMP,3) "date"  FROM DUAL;
+
+--군복무 : 18개월
+select  sysdate 입대일자, add_months(sysdate,18) 제대일자 from dual; 
+                          음수(과거)
+                          양수(미래) 
+select add_months(sysdate,-18) 입대일자 from dual
+
+
+###MONTHS_BETWEEN:날짜의 차가 월로 반환
+
+-- 두 일자 사이에 달의 수를 조회하는 예제
+SELECT MONTHS_BETWEEN(TO_DATE('2010-06-05','RRRR-MM-DD'), 
+                      TO_DATE('2010-05-01','RRRR-MM-DD'))  "month"  
+  FROM DUAL;
+ 
+### 날짜-날짜 : 일수 
+-- 두 일자 사이에 일짜 수를 조회하는 예제
+SELECT TO_DATE('2010-06-05','RRRR-MM-DD') - 
+       TO_DATE('2010-05-01','RRRR-MM-DD')  "Day"  
+  FROM DUAL;
+
+
+--여러분의 살아온 일수 또는 월수
+select 
+       trunc(months_between(sysdate , to_date('1994-9-30','YYYY-MM-DD')),1) as 살아온월수,
+       trunc(sysdate - to_date('1994-9-30','YYYY-MM-DD'),1) as 살아온일수
+from dual       
+
+
+
+-- ROUND예제(기준(year,month,dd) :사사오입)
+select round(to_date('2011-09-11 21:00:01','RRRR-MM-DD HH24:MI:SS'), 'YEAR') from dual;
+
+select round(to_date('2011-09-11 21:00:01','RRRR-MM-DD HH24:MI:SS'), 'MONTH') from dual;  
+select round(to_date('2011-09-18 21:00:01','RRRR-MM-DD HH24:MI:SS'), 'MONTH') from dual;
+ 
+select round(to_date('2011-09-18 21:00:01','RRRR-MM-DD HH24:MI:SS'), 'DD') from dual;
+
+--생략시 : DD기준으로 처리
+select round(to_date('2011-09-18 21:00:01','RRRR-MM-DD HH24:MI:SS')) from dual;
+  
+
+--사원테이블에 각 직원들의 근무년수 , 근무월수 ,총근무월수
+                     
+select 
+    sabun,saname,sahire,
+    floor(months_between(sysdate,sahire)/12) as 근무년수,
+    floor(mod(months_between(sysdate,sahire),12)) as 잔여월수,
+    floor(months_between(sysdate,sahire)) as 총근무월수,
+    floor(((sapay/13)/12 * months_between(sysdate,sahire))) as 퇴직금1,
+    floor(
+	    floor(months_between(sysdate,sahire)/12)  * (sapay/13) +
+	    mod(months_between(sysdate,sahire),12)/12 * (sapay/13)
+    ) as 퇴직금2,
+    floor(sapay/13) as 월급
+from sawon
+
+
+--년봉제 퇴직금 계산법(년봉에 퇴직금 포함된경우)
+월급   = 년봉 / 13
+퇴직금 = 월급 * 근무년수 + 월급 * 잔여월수/12
+퇴직금 = (월급/12 * 총근무월수)  
+
+*/
+
+/*
+  ### Subquery
+  : Subquery(하위쿼리)의 실행결과를 이용해서 MainQuery를 수행하는 Query 
+ 
+  --사원테이블에서 최불암과 동일한 부서 직원 추출
+  1.최불암의 부서정보 구한다
+     select deptno from sawon where saname='최불암'
+  2.10번부서 직원 추출
+     select * from sawon where deptno=10
+    
+  select * from sawon 
+  where deptno in (select deptno from sawon where saname='최불암')
+  
+  
+  --사원테이블에서 이미자와 급여 같거나 많이 받는직원 추출
+  select sapay from sawon where saname='이미자'
+  
+  select * from sawon
+  where sapay >= ANY (select sapay from sawon where saname='이미자')
+    
+  --사원테이블에서 이미자와 직급 같은 직원 추출
+  select sajob from sawon where saname='이미자'
+  
+  select * from sawon 
+  where sajob in ( select sajob from sawon where saname='이미자' )  
+  
+  --사원테이블에서 차범근과 동일한 년도에 입사한 직원 추출
+  select to_char(sahire,'YYYY') from sawon where saname='차범근' 
+  
+  select * from sawon
+  where to_char(sahire,'YYYY') in (select to_char(sahire,'YYYY') from sawon where saname='차범근')
+  
+  
+  --Q1.사원테이블에서 장동건과 동일한 달(month)에 입사사 직원 추출 
+  select * from sawon
+  where to_char(sahire,'MM') in (select to_char(sahire,'MM') from sawon where saname='장동건')
+  
+  
+  --Q2.사원테이블에서 이미자와 동일한 계절에 입사한 직원 추출
+  select  floor(to_number(to_char(sahire,'MM'))/3)    from sawon where saname='이미자'
+  
+  -- 나중에 뷰를 공부한후에 다시 해보자    
+  select * from sawon
+  where  floor(to_number(to_char(sahire,'MM'))/3) in (select  floor(to_number(to_char(sahire,'MM'))/3)    from sawon where saname='이미자')
+  
+  
+  --사원테이블에서 전체급여평균보다 급여를 많이받는 직원 추출
+  
+  select avg(sapay) from sawon
+  
+  select * from sawon
+  where sapay > (select avg(sapay) from sawon)
+  
+  --사원테이블에서 최초입사한 직원을 추출
+  select min(sahire) from sawon
+  
+  select * from sawon
+  where sahire = (select min(sahire) from sawon)
+  
+  --동일한 날짜에 입사한 직원추출(시간은 제외시킨다)
+  select * from sawon
+  where to_char(sahire,'YYYY-MM-DD') = (select min(to_char(sahire,'YYYY-MM-DD')) from sawon)
+  
+  --사원테이블에서 최근입사자
+  select * from sawon
+  where sahire = (select max(sahire) from sawon)
+  
+  
+  --사원테이블에서 최초입사자 / 최근입사자 모두 추출
+  select * from sawon
+  where  sahire = (select max(sahire) from sawon)
+         or
+         sahire = (select min(sahire) from sawon)
+  
+  insert into sawon values(21, '최불암', '남자' , 20 , '과장', 
+                           to_date('1984-07-25 13:00:00','YYYY-MM-DD HH24:MI:SS'), 2, 3800) ;
+  
+  select * from sawon
+  
+  --중복제거
+  select  distinct deptno from sawon
+  order by deptno
+   
+
+*/
+
+
+
+
+/*
+  집(통)계 함수
+  1.  count(필드) : 도메인 갯수구한다( null은 포함하지 않는다) 
+      count(*)    : 전체레코드수 구하기  
+  
+	  select * from sawon
+	  select count(*) , count(samgr)  from sawon 
+  2.  sum(숫자)   : 도메인의 합 
+      avg(숫자)   : 도메인의 평균	
+      max(숫자 또는 날짜) : 도메인내의 최대값
+      min(숫자 또는 날짜) : 도메인내의 최소값  
+      
+      select 
+           sum(sapay)  as 전체급여합계,
+           avg(sapay)  as 전체급여평균,
+           max(sapay)  as 최대급여액,
+           min(sapay)  as 최소급여액,
+           max(sahire) as 최근입사일자,
+           min(sahire) as 최초입사일자 
+      from sawon
+
+*/
